@@ -297,7 +297,10 @@
     </div>
 
     <script>
-        let items = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E', 'Option F'];
+        // Récupération des choix enregistrés ou valeur par défaut
+        const savedItems = localStorage.getItem('wheel_items');
+        let items = savedItems ? JSON.parse(savedItems) : ['Option A', 'Option B', 'Option C', 'Option D', 'Option E', 'Option F'];
+
         const colors = [
             '#6366f1', '#ec4899', '#8b5cf6', '#3b82f6', 
             '#10b981', '#f59e0b', '#ef4444', '#14b8a6', '#f43f5e'
@@ -318,6 +321,11 @@
 
         let currentAngle = 0;
         let isSpinning = false;
+
+        // Fonction pour sauvegarder dans la mémoire du téléphone/navigateur
+        function saveItems() {
+            localStorage.setItem('wheel_items', JSON.stringify(items));
+        }
 
         function drawWheel() {
             const numItems = items.length;
@@ -428,12 +436,13 @@
                 itemsListContainer.appendChild(row);
             });
 
-            // Écouteurs de modification
+            // Écouteurs de modification en direct
             document.querySelectorAll('.item-row input').forEach(input => {
                 input.addEventListener('input', (e) => {
                     const idx = e.target.getAttribute('data-index');
                     items[idx] = e.target.value;
                     drawWheel();
+                    saveItems(); // Sauvegarde automatique
                 });
             });
 
@@ -445,6 +454,7 @@
                         items.splice(idx, 1);
                         renderItemsList();
                         drawWheel();
+                        saveItems(); // Sauvegarde automatique
                     } else {
                         alert('Il faut au moins 2 choix sur la roue !');
                     }
@@ -459,6 +469,7 @@
                 newItemInput.value = '';
                 renderItemsList();
                 drawWheel();
+                saveItems(); // Sauvegarde automatique
             }
         });
 
