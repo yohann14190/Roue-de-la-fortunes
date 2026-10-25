@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roue de la Fortune</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* Conteneur de la roue */
+        .wheel-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        /* Aiguille indicateur en haut */
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent);
+            z-index: 10;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+        }
+
+        /* Boutons de contrôle */
+        .controls {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        button.secondary {
+            background-color: var(--card-bg);
+            border: 1px solid #334155;
+            box-shadow: none;
+        }
+
+        /* Modale / Panneau des choix */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            box-shadow: none;
+            width: auto;
+        }
+
+        .items-list {
+            overflow-y: auto;
+            flex: 1;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .item-row input {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .item-row input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .delete-item {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            width: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .add-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-row input {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        /* Modale de Résultat */
+        #result-modal .modal-content {
+            text-align: center;
+            align-items: center;
+        }
+
+        #winner-text {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 20px 0;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Roue de la Fortune</h1>
+    </header>
+
+    <div class="main-container">
+        <div class="wheel-wrapper">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="600" height="600"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="spinBtn">TOURNER</button>
+            <button class="secondary" id="configBtn">Options</button>
+        </div>
+    </div>
+
+    <!-- Modale Configuration -->
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gérer les choix</h2>
+                <button class="close-btn" id="closeConfig">&times;</button>
+            </div>
+            <div class="items-list" id="itemsListContainer">
+                <!-- Rempli dynamiquement -->
+            </div>
+            <div class="add-row">
+                <input type="text" id="newItemInput" placeholder="Nouveau choix...">
+                <button id="addItemBtn">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Résultat -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <h2>🎉 Le gagnant est :</h2>
+            <div id="winner-text">Option</div>
+            <button id="closeResultBtn">Super !</button>
+        </div>
+    </div>
+
+    <script>
+        let items = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E', 'Option F'];
+        const colors = [
+            '#6366f1', '#ec4899', '#8b5cf6', '#3b82f6', 
+            '#10b981', '#f59e0b', '#ef4444', '#14b8a6', '#f43f5e'
+        ];
+
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const configBtn = document.getElementById('configBtn');
+        const configModal = document.getElementById('configModal');
+        const closeConfig = document.getElementById('closeConfig');
+        const itemsListContainer = document.getElementById('itemsListContainer');
+        const newItemInput = document.getElementById('newItemInput');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const resultModal = document.getElementById('resultModal');
+        const winnerText = document.getElementById('winnerText');
+        const closeResultBtn = document.getElementById('closeResultBtn');
+
+        let currentAngle = 0;
+        let isSpinning = false;
+
+        function drawWheel() {
+            const numItems = items.length;
+            const arcSize = (2 * Math.PI) / numItems;
+            const radius = canvas.width / 2;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (numItems === 0) return;
+
+            items.forEach((item, index) => {
+                const angle = currentAngle + index * arcSize;
+
+                // Dessin de la part
+                ctx.beginPath();
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius - 10, angle, angle + arcSize);
+                ctx.lineTo(radius, radius);
+                ctx.fill();
+                ctx.save();
+
+                // Texte de la part
+                ctx.translate(radius, radius);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px system-ui';
+                ctx.fillText(item, radius - 30, 8);
+                ctx.restore();
+            });
+
+            // Cercle central décoratif
+            ctx.beginPath();
+            ctx.arc(radius, radius, 35, 0, 2 * Math.PI);
+            ctx.fillStyle = '#1e293b';
+            ctx.fill();
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#f59e0b';
+            ctx.stroke();
+        }
+
+        function spinWheel() {
+            if (isSpinning || items.length === 0) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            const numItems = items.length;
+            const arcSize = (2 * Math.PI) / numItems;
+            
+            // Rotation aléatoire (entre 5 et 10 tours complets + offset)
+            const randomSpins = 5 + Math.random() * 5;
+            const targetAngle = currentAngle + randomSpins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+
+            const duration = 4000; // 4 secondes
+            const startTime = performance.now();
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Fonction d'accélération/décélération fluide (easeOutCubic)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                currentAngle = currentAngle + (targetAngle - currentAngle) * easeOut;
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    determineWinner();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function determineWinner() {
+            const numItems = items.length;
+            const arcSize = (2 * Math.PI) / numItems;
+            
+            // Normaliser l'angle entre 0 et 2*PI
+            const normalizedAngle = (2 * Math.PI - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
+            
+            // L'aiguille est en haut (à -PI/2 ou 3*PI/2)
+            const pointerOffset = Math.PI / 2;
+            const adjustedAngle = (normalizedAngle + pointerOffset) % (2 * Math.PI);
+            
+            const winningIndex = Math.floor(adjustedAngle / arcSize) % numItems;
+            const winner = items[winningIndex];
+
+            winnerText.textContent = winner;
+            resultModal.classList.add('active');
+        }
+
+        // Gestion de la liste des options
+        function renderItemsList() {
+            itemsListContainer.innerHTML = '';
+            items.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.innerHTML = `
+                    <input type="text" value="${item}" data-index="${index}">
+                    <button class="delete-item" data-index="${index}">&times;</button>
+                `;
+                itemsListContainer.appendChild(row);
+            });
+
+            // Écouteurs de modification
+            document.querySelectorAll('.item-row input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    items[idx] = e.target.value;
+                    drawWheel();
+                });
+            });
+
+            // Écouteurs de suppression
+            document.querySelectorAll('.delete-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    if (items.length > 2) {
+                        items.splice(idx, 1);
+                        renderItemsList();
+                        drawWheel();
+                    } else {
+                        alert('Il faut au moins 2 choix sur la roue !');
+                    }
+                });
+            });
+        }
+
+        addItemBtn.addEventListener('click', () => {
+            const val = newItemInput.value.trim();
+            if (val) {
+                items.push(val);
+                newItemInput.value = '';
+                renderItemsList();
+                drawWheel();
+            }
+        });
+
+        spinBtn.addEventListener('click', spinWheel);
+        canvas.addEventListener('click', spinWheel);
+
+        configBtn.addEventListener('click', () => {
+            renderItemsList();
+            configModal.classList.add('active');
+        });
+
+        closeConfig.addEventListener('click', () => {
+            configModal.classList.remove('active');
+        });
+
+        closeResultBtn.addEventListener('click', () => {
+            resultModal.classList.remove('active');
+        });
+
+        // Initialisation
+        drawWheel();
+    </script>
+</body>
+</html>
