@@ -41,7 +41,7 @@
         }
 
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             background: linear-gradient(135deg, #818cf8, #c084fc);
             -webkit-background-clip: text;
@@ -450,7 +450,7 @@
             document.querySelectorAll('.delete-item').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const idx = e.target.getAttribute('data-index');
-                    if (items.length > 2) {
+     if (items.length > 2) {
                         items.splice(idx, 1);
                         renderItemsList();
                         drawWheel();
