@@ -1,0 +1,17 @@
+{
+  "background_color": "#8f3232",
+  "dir": "auto",
+  "display": "standalone",
+  "name": "La-Roue",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Roue",
+  "start_url": "https://yohann14190.github.io/Roue-de-la-fortunes/",
+  "theme_color": "#ffffff",
+  "id": "https://yohann14190.github.io/Roue-de-la-fortunes/",
+  "description": "Une roue de la fortune interactive pour faire des choix au hasard.",
+  "lang": "fr",
+  "categories": [
+    "games"
+  ]
+}
